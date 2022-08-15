@@ -1,33 +1,67 @@
 {
+    "meta": {
+        "version": "0.0.1"
+    },
     "#": {
+        "meta!": {
+            "format!": "string(Poverty JSON)",
+            "version!": "string(M.N.P)"
+        },
         "transactions": [ "<Transaction>" ],
         "templates": [ "<Transaction>" ],
-        "currencies": [ "<Currency>" ],
-        "pools": [ "<Pool>" ],
-        "budget": [ "<Budget>" ]
+        "currencies": [ {
+            "name#": "string",
+            "fullname?": "string",
+            "note?": "string",
+            "exchange?": [ {
+                "target#": "string -> #.currencies[?].name",
+                "rate!": "number.real"
+            } ],
+            "format?": "string(America|Europe|Sinosphere|India)",
+            "visible?": true
+        } ],
+        "pools": [ {
+            "id#": "string",
+            "name": "string",
+            "currency": "string -> #.currencies[?].name",
+            "balance": "number.real",
+            "total?": true,
+            "note?": "string"
+        } ],
+        "budgets": [ {
+            "id#": "string",
+            "name": "string",
+            "currency": "string -> #.currencies[?].name",
+            "automation?": {
+                "period": "string(weekly|monthly|annual)",
+                "start": "<Datetime>",
+                "end?": "<Datetime>",
+                "over?": "string(return|keep)"
+            },
+            "budgets": [ {
+                "id#(#.budgets[*].budgets)": "string",
+                "name": "string",
+                "start": "<Datetime>",
+                "end": "<Datetime>",
+                "balance": "number.real",
+                "visible?": true
+            } ]
+        } ]
     }, 
     "<Datetime>": "string.datetime(YYYY-MM-DDThh:mm:ss.SSS±ZZ:zz)",
     "<Transaction>": {
-        "id#": "string",
+        "id#(#.transactions)": "string",
         "item!": "string",
-        "price?": "double.real",
-        "currency?": [ "$types:", "string", "string => #.currencies[*].name" ],
-        "time //交易時刻": "<Datetime>",
-        "logtime! //紀錄時刻": "<Datetime>",
+        "type?": "string(transfer|balance)",
+        "price?": "number.real",
+        "currency?": "string -> #.currencies[?].name",
+        "time": "<Datetime>",
+        "logtime!": "<Datetime>",
         "note?": "string",
+        "source?": "string -> #.pools[?].id",
+        "target?": "string -> #.pools[?].id",
+        "budget?": "string -> #.budgets[?].budgets[?].id",
         "tags?": [ "string" ],
-        "pool?": "string -> #.pools[*].name",
-        "budget?": "string -> #.budgets[*].name"
-    }, 
-    "<Currency>": {
-        "name#": "string",
-        "fullname?": "string",
-        "note?": "string",
-        "option?": true,
-        "exchange?": [ {
-            "target#": "string -> #.currencies[*].name",
-            "rate!": "double.real"
-        } ],
-        "format?": "string(America|Europe|Sinosphere|India)"
+        "subs": [ "<Transaction>" ]
     }
 }
