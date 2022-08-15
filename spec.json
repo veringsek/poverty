@@ -1,0 +1,33 @@
+{
+    "#": {
+        "transactions": [ "<Transaction>" ],
+        "templates": [ "<Transaction>" ],
+        "currencies": [ "<Currency>" ],
+        "pools": [ "<Pool>" ],
+        "budget": [ "<Budget>" ]
+    }, 
+    "<Datetime>": "string.datetime(YYYY-MM-DDThh:mm:ss.SSS±ZZ:zz)",
+    "<Transaction>": {
+        "id#": "string",
+        "item!": "string",
+        "price?": "double.real",
+        "currency?": [ "$types:", "string", "string => #.currencies[*].name" ],
+        "time //交易時刻": "<Datetime>",
+        "logtime! //紀錄時刻": "<Datetime>",
+        "note?": "string",
+        "tags?": [ "string" ],
+        "pool?": "string -> #.pools[*].name",
+        "budget?": "string -> #.budgets[*].name"
+    }, 
+    "<Currency>": {
+        "name#": "string",
+        "fullname?": "string",
+        "note?": "string",
+        "option?": true,
+        "exchange?": [ {
+            "target#": "string -> #.currencies[*].name",
+            "rate!": "double.real"
+        } ],
+        "format?": "string(America|Europe|Sinosphere|India)"
+    }
+}
