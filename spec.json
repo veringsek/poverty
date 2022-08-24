@@ -3,27 +3,28 @@
         "version": "0.0.1"
     },
     "#": {
-        "meta!": {
-            "format!": "string(Poverty JSON)",
-            "version!": "string(M.N.P)"
+        "meta*": {
+            "format*": "string(Poverty JSON)",
+            "version*": "string(M.N.P)"
         },
         "transactions": [ "<Transaction>" ],
         "templates": [ "<Transaction>" ],
         "currencies": [ {
-            "name#": "string",
-            "fullname?": "string",
+            "id#": "string",
+            "name?": "string",
             "note?": "string",
             "exchange?": [ {
-                "target#": "string -> #.currencies[?].name",
-                "rate!": "number.real"
+                "target#": "string -> #.currencies[?].id",
+                "rate*": "number.real"
             } ],
             "format?": "string(America|Europe|Sinosphere|India)",
-            "visible?": true
+            "visible?": true,
+            "default?!": true
         } ],
         "pools": [ {
             "id#": "string",
             "name": "string",
-            "currency": "string -> #.currencies[?].name",
+            "currency": "string -> #.currencies[?].id",
             "balance": "number.real",
             "total?": true,
             "note?": "string"
@@ -31,7 +32,7 @@
         "budgets": [ {
             "id#": "string",
             "name": "string",
-            "currency": "string -> #.currencies[?].name",
+            "currency": "string -> #.currencies[?].id",
             "automation?": {
                 "period": "string(weekly|monthly|annual)",
                 "start": "<Datetime>",
@@ -51,17 +52,18 @@
     "<Datetime>": "string.datetime(YYYY-MM-DDThh:mm:ss.SSS±ZZ:zz)",
     "<Transaction>": {
         "id#(#.transactions)": "string",
-        "item!": "string",
+        "item?": "string",
         "type?": "string(transfer|balance)",
         "price?": "number.real",
-        "currency?": "string -> #.currencies[?].name",
+        "currency?": "string -> #.currencies[?].id",
         "time": "<Datetime>",
-        "logtime!": "<Datetime>",
+        "logtime*": "<Datetime>",
         "note?": "string",
         "source?": "string -> #.pools[?].id",
         "target?": "string -> #.pools[?].id",
         "budget?": "string -> #.budgets[?].budgets[?].id",
         "tags?": [ "string" ],
-        "subs": [ "<Transaction>" ]
+        "children": [ "string -> #.transactions[?].id" ],
+        "parent": "string -> #.transactions[?].id"
     }
 }
