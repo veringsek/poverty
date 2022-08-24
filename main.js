@@ -11,11 +11,11 @@ function save(poverty = poverty, path = DEV.TEST_JSON) {
     fs.writeFileSync(path, JSON.stringify(data, null, '\t'));
 }
 
-let poverty = new Poverty(fs.readFileSync(DEV.TEST_JSON, 'utf-8'));
+let pv = new Poverty(fs.readFileSync(DEV.TEST_JSON, 'utf-8'));
 
-console.log(poverty.data);
+povconsole.log(pv.data);
 
-save(poverty, DEV.TEST_JSON);
+save(pv, DEV.TEST_JSON);
 
 // const argv = yargs
 //     .command('create <path>', 'Create a Poverty JSON.')

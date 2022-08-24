@@ -36,6 +36,14 @@ class Poverty {
         return id;
     }
 
+    static findUnique(array, key, value, returnDefault = null, returnDuplicates = undefined) {
+        let predicate = element => element[key] === value;
+        let founds = array.filter(predicate);
+        if (founds.length < 1) return returnDefault;
+        if (founds.length > 1 && returnDuplicates !== undefined) return returnDuplicates;
+        return founds[0];
+    }
+
     static hasDuplicates(array) {
         return (new Set(array)).size !== array.length;
     }
@@ -46,11 +54,11 @@ class Poverty {
 
     validate() {
         let arrays = [
-            this.data.transactions,
-            this.data.templates,
-            this.data.currencies,
-            this.data.pools,
-            this.data.budgets
+            this.transactions,
+            this.templates,
+            this.currencies,
+            this.pools,
+            this.budgets
         ];
         for (let array of arrays) {
             if (Poverty.hasDuplicates(Poverty.ids(array))) return false;
@@ -58,28 +66,34 @@ class Poverty {
         return true;
     }
 
-    getCurrency(pool) {
+    currencyOf(pool) {
         if (pool) {
             return pool.currency.name;
         } else {
-            let matches = this.data.currencies.filter(currency => currency.default);
-            if (matches.length === 1) {
-                return matches[0].name;
-            } else {
-                return null;
-            }
+            return this.defaultCurrency;
         }
     }
 
+    /* Structure */
+
+    get transactions() {
+        return this.data.transactions;
+    }
+
+    get templates() {
+        return this.data.templates;
+    }
+
+    get currencies() {
+        return this.data.currencies;
+    }
+
     get defaultCurrency() {
-        let defaults = this.data.currencies.filter(currency => currency.default);
-        if (defaults.length < 1) {
-            return null;
-        }
-        if (defaults.length > 1) {
-            console.warn(`More than one default currency.`);
-        }
-        return defaults[0];
+        return Poverty.findUnique(this.currencies, 'default', true);
+    }
+
+    get pools() {
+        return this.data.pools;
     }
 
     pool(poolId) {
@@ -93,12 +107,20 @@ class Poverty {
 
     createPool(name, currency = Poverty.CURRENCY_DEFAULT, total = true, note = '') {
         let pool = {
-            id: Poverty.autoId(this.data.pools.map(pool => pool.id)),
+            id: Poverty.autoId(this.pools.map(pool => pool.id)),
             name, total, balance: 0, note,
-            currency: currency === Poverty.CURRENCY_DEFAULT ? this.defaultCurrency() : currency
+            currency: currency === Poverty.CURRENCY_DEFAULT ? this.defaultCurrency : currency
         };
-        this.data.pool.push(pool);
+        this.pools.push(pool);
         return pool;
+    }
+
+    get budgets() {
+        return this.data.budgets;
+    }
+
+    budget(id) {
+
     }
 }
 module.exports = Poverty;
