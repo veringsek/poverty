@@ -49,7 +49,7 @@
             } ]
         } ]
     }, 
-    "<Datetime>": "string.datetime(YYYY-MM-DDThh:mm:ss.SSS±ZZ:zz)",
+    "<Datetime>": "number.datetime",
     "<Transaction>": {
         "id#(#.transactions)": "string",
         "item?": "string",

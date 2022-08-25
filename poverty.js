@@ -68,7 +68,7 @@ class Poverty {
 
     timeAs(time) {
         if (time === Poverty.TIME.NOW) {
-            return new Date();
+            return new Date().getTime();
         }
     }
 
