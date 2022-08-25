@@ -84,7 +84,7 @@ class Poverty {
         return array.map(element => element.id);
     }
 
-    timeAs(time) {
+    timeFrom(time) {
         if (time === Poverty.TIME.NOW) {
             return new Date().getTime();
         }
@@ -112,7 +112,7 @@ class Poverty {
         }
     }
 
-    currencyAs(currency) {
+    currencyFrom(currency) {
         if (currency === Poverty.CURRENCY.DEFAULT) return this.defaultCurrency;
         return currency;
     }
@@ -128,9 +128,9 @@ class Poverty {
         let transaction = {
             id: Poverty.autoId(this.transactions),
             item, type, price, note, tags,
-            currency: this.currencyAs(currency),
-            time: this.timeAs(time),
-            logtime: this.timeAs(Poverty.TIME.NOW),
+            currency: this.currencyFrom(currency),
+            time: this.timeFrom(time),
+            logtime: this.timeFrom(Poverty.TIME.NOW),
             source: this.pool(source)?.id,
             target: this.pool(target)?.id,
             budget: this.budget(budget)?.id,
@@ -170,7 +170,7 @@ class Poverty {
         let pool = {
             id: Poverty.autoId(Poverty.ids(this.pools)),
             name, total, balance: 0, note,
-            currency: this.currencyAs(currency)
+            currency: this.currencyFrom(currency)
         };
         this.pools.push(pool);
         return pool;
@@ -189,10 +189,10 @@ class Poverty {
         let budget = {
             id: Poverty.autoId(Poverty.ids(this.budgets)),
             name,
-            currency: this.currencyAs(currency),
+            currency: this.currencyFrom(currency),
             automation: {
                 period, end, over,
-                start: this.timeAs(start)
+                start: this.timeFrom(start)
             }
         };
         this.budgets.push(budget);
