@@ -26,7 +26,10 @@ class Poverty {
 
     static POVERTY_JSON_VERSION = '0.0.1';
     static ID_AUTO_ASSIGN = '+';
-    static CURRENCY_DEFAULT = '<CURRENCY_DEFAULT>';
+    static CURRENCY = {
+        DEFAULT: '<CURRENCY_DEFAULT', 
+        DEFAULT_FORMAT: 'America'
+    };
     static BUDGET = {
         PERIOD: {
             WEEKLY: 'weekly',
@@ -95,7 +98,7 @@ class Poverty {
     }
 
     currencyAs(currency) {
-        if (currency === Poverty.CURRENCY_DEFAULT) return this.defaultCurrency;
+        if (currency === Poverty.CURRENCY.DEFAULT) return this.defaultCurrency;
         return currency;
     }
 
@@ -117,6 +120,14 @@ class Poverty {
         return Poverty.findUnique(this.currencies, true, 'default');
     }
 
+    createCurrency(name, note = '', format = Poverty.CURRENCY.DEFAULT_FORMAT, visible = true, def = false) {
+        let currency = {
+            id: Poverty.autoId(Poverty.ids(this.currencies)),
+            name, note, format, visible, default: def
+        };
+        this.currencies.push(currency);
+    }
+
     get pools() {
         return this.data.pools;
     }
@@ -125,7 +136,7 @@ class Poverty {
         return Poverty.findUnique(this.pools, poolId);
     }
 
-    createPool(name, currency = Poverty.CURRENCY_DEFAULT, total = true, note = '') {
+    createPool(name, currency = Poverty.CURRENCY.DEFAULT, total = true, note = '') {
         let pool = {
             id: Poverty.autoId(Poverty.ids(this.pools)),
             name, total, balance: 0, note,
@@ -143,7 +154,7 @@ class Poverty {
         return Poverty.findUnique(this.budgets, budgetId);
     }
 
-    createBudget(name, currency = Poverty.CURRENCY_DEFAULT, period = Poverty.BUDGET.PERIOD.MONTHLY,
+    createBudget(name, currency = Poverty.CURRENCY.DEFAULT, period = Poverty.BUDGET.PERIOD.MONTHLY, 
         start = Poverty.TIME.NOW, end = null, over = Poverty.BUDGET.OVER.RETURN) {
         let budget = {
             id: Poverty.autoId(Poverty.ids(this.budgets)),
