@@ -33,7 +33,7 @@
             "id#": "string",
             "name": "string",
             "currency": "string -> #.currencies[?].id",
-            "automation?": {
+            "automation": {
                 "period": "string(weekly|monthly|annual)",
                 "start": "<Datetime>",
                 "end?": "<Datetime>",

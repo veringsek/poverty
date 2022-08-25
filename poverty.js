@@ -27,6 +27,20 @@ class Poverty {
     static POVERTY_JSON_VERSION = '0.0.1';
     static ID_AUTO_ASSIGN = '+';
     static CURRENCY_DEFAULT = '<CURRENCY_DEFAULT>';
+    static BUDGET = {
+        PERIOD: {
+            WEEKLY: 'weekly',
+            MONTHLY: 'monthly',
+            ANNUAL: 'annual'
+        },
+        OVER: {
+            RETURN: 'return',
+            KEEP: 'keep'
+        }
+    };
+    static TIME = {
+        NOW: '<TIME.NOW>'
+    };
 
     static autoId(existings = [], length = Poverty.ID_AUTO_LENGTH) {
         let id;
@@ -36,7 +50,7 @@ class Poverty {
         return id;
     }
 
-    static findUnique(array, key, value, returnDefault = null, returnDuplicates = undefined) {
+    static findUnique(array, value, key = 'id', returnDefault = null, returnDuplicates = undefined) {
         let predicate = element => element[key] === value;
         let founds = array.filter(predicate);
         if (founds.length < 1) return returnDefault;
@@ -50,6 +64,12 @@ class Poverty {
 
     static ids(array) {
         return array.map(element => element.id);
+    }
+
+    timeAs(time) {
+        if (time === Poverty.TIME.NOW) {
+            return new Date();
+        }
     }
 
     validate() {
@@ -74,6 +94,11 @@ class Poverty {
         }
     }
 
+    currencyAs(currency) {
+        if (currency === Poverty.CURRENCY_DEFAULT) return this.defaultCurrency;
+        return currency;
+    }
+
     /* Structure */
 
     get transactions() {
@@ -89,7 +114,7 @@ class Poverty {
     }
 
     get defaultCurrency() {
-        return Poverty.findUnique(this.currencies, 'default', true);
+        return Poverty.findUnique(this.currencies, true, 'default');
     }
 
     get pools() {
@@ -97,19 +122,14 @@ class Poverty {
     }
 
     pool(poolId) {
-        let matches = this.data.pools.filter(pool => pool.id === poolId);
-        if (matches.length === 1) {
-            return matches[0];
-        } else {
-            return null;
-        }
+        return Poverty.findUnique(this.pools, poolId);
     }
 
     createPool(name, currency = Poverty.CURRENCY_DEFAULT, total = true, note = '') {
         let pool = {
-            id: Poverty.autoId(this.pools.map(pool => pool.id)),
+            id: Poverty.autoId(Poverty.ids(this.pools)),
             name, total, balance: 0, note,
-            currency: currency === Poverty.CURRENCY_DEFAULT ? this.defaultCurrency : currency
+            currency: this.currencyAs(currency)
         };
         this.pools.push(pool);
         return pool;
@@ -119,8 +139,23 @@ class Poverty {
         return this.data.budgets;
     }
 
-    budget(id) {
+    budget(budgetId) {
+        return Poverty.findUnique(this.budgets, budgetId);
+    }
 
+    createBudget(name, currency = Poverty.CURRENCY_DEFAULT, period = Poverty.BUDGET.PERIOD.MONTHLY,
+        start = Poverty.TIME.NOW, end = null, over = Poverty.BUDGET.OVER.RETURN) {
+        let budget = {
+            id: Poverty.autoId(Poverty.ids(this.budgets)),
+            name,
+            currency: this.currencyAs(currency),
+            automation: {
+                period, end, over,
+                start: this.timeAs(start)
+            }
+        };
+        this.budgets.push(budget);
+        return budget;
     }
 }
 module.exports = Poverty;

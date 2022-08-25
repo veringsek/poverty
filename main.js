@@ -13,7 +13,7 @@ function save(poverty = poverty, path = DEV.TEST_JSON) {
 
 let pv = new Poverty(fs.readFileSync(DEV.TEST_JSON, 'utf-8'));
 
-povconsole.log(pv.data);
+console.log(pv.data);
 
 save(pv, DEV.TEST_JSON);
 
