@@ -26,10 +26,24 @@ class Poverty {
 
     static POVERTY_JSON_VERSION = '0.0.1';
     static ID_AUTO_ASSIGN = '+';
+    
+    static TRANSACTION = {
+        TYPE: {
+            TRANSFER: 'transfer', 
+            BALANCE: 'balance'
+        }
+    };
+
     static CURRENCY = {
         DEFAULT: '<CURRENCY_DEFAULT', 
-        DEFAULT_FORMAT: 'America'
+        FORMAT: {
+            AMERICA: 'America',
+            EUROPE: 'Europe', 
+            SINOSPHERE: 'Sinosphere',
+            INDIA: 'India'
+        }
     };
+
     static BUDGET = {
         PERIOD: {
             WEEKLY: 'weekly',
@@ -41,6 +55,7 @@ class Poverty {
             KEEP: 'keep'
         }
     };
+
     static TIME = {
         NOW: '<TIME.NOW>'
     };
@@ -108,6 +123,21 @@ class Poverty {
         return this.data.transactions;
     }
 
+    createTransaction(item = '', type = Poverty.TRANSACTION.TYPE.TRANSFER, price = null, currency = Poverty.CURRENCY.DEFAULT,
+        time = Poverty.TIME.NOW, note = '', source = null, target = null, budget = null, tags = []) {
+        let transaction = {
+            id: Poverty.autoId(this.transactions),
+            item, type, price, note, tags,
+            currency: this.currencyAs(currency),
+            time: this.timeAs(time),
+            logtime: this.timeAs(Poverty.TIME.NOW),
+            source: this.pool(source)?.id,
+            target: this.pool(target)?.id,
+            budget: this.budget(budget)?.id,
+        };
+        this.transactions.push(transaction);
+    }
+
     get templates() {
         return this.data.templates;
     }
@@ -120,7 +150,7 @@ class Poverty {
         return Poverty.findUnique(this.currencies, true, 'default');
     }
 
-    createCurrency(name, note = '', format = Poverty.CURRENCY.DEFAULT_FORMAT, visible = true, def = false) {
+    createCurrency(name, note = '', format = Poverty.CURRENCY.FORMAT.AMERICA, visible = true, def = false) {
         let currency = {
             id: Poverty.autoId(Poverty.ids(this.currencies)),
             name, note, format, visible, default: def
