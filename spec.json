@@ -34,7 +34,7 @@
             "name": "string",
             "currency": "string -> #.currencies[?].id",
             "automation": {
-                "period": "string(weekly|monthly|annual)",
+                "period?": "string(weekly|monthly|annual)",
                 "start": "<Datetime>",
                 "end?": "<Datetime>",
                 "over?": "string(return|keep)"

@@ -1,6 +1,7 @@
 const fs = require('fs');
 const yargs = require('yargs');
 const Poverty = require('./poverty.js');
+const yup = require('yup');
 
 let DEV = {
     TEST_JSON: './test/test.json'
@@ -13,7 +14,7 @@ function save(poverty = poverty, path = DEV.TEST_JSON) {
 
 let pv = new Poverty(fs.readFileSync(DEV.TEST_JSON, 'utf-8'));
 
-console.log(pv.data);
+console.log(''); // console.log(pv.data);
 
 save(pv, DEV.TEST_JSON);
 
