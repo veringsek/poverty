@@ -147,7 +147,13 @@ class Poverty {
     }
 
     get defaultCurrency() {
-        return Poverty.findUnique(this.currencies, true, 'default');
+        return Poverty.findUnique(this.currencies, true, 'default').id;
+    }
+
+    validateCurrency(currency) {
+        if (!currency) return false;
+        if (!Poverty.findUnique(this.currencies, currency.id)) return false;
+        if (currency.default && currency.id !== this.defaultCurrency) return false;
     }
 
     createCurrency(name, note = '', format = Poverty.CURRENCY.FORMAT.AMERICA, visible = true, def = false) {
@@ -166,6 +172,11 @@ class Poverty {
         return Poverty.findUnique(this.pools, poolId);
     }
 
+    validatePool(pool) {
+        if (!pool) return false;
+        if (!Poverty.findUnique(this.pools, pool.id)) return false;
+    }
+
     createPool(name, currency = Poverty.CURRENCY.DEFAULT, total = true, note = '') {
         let pool = {
             id: Poverty.autoId(Poverty.ids(this.pools)),
@@ -182,6 +193,17 @@ class Poverty {
 
     budget(budgetId) {
         return Poverty.findUnique(this.budgets, budgetId);
+    }
+
+    validateBudget(budget) {
+        if (!budget) return false;
+        if (!Poverty.findUnique(this.budgets, budget.id)) return false;
+        if (Poverty.hasDuplicates(budget.accounts.map(account => account.id))) return false;
+    }
+
+    validateAccount(account) {
+        if (!account) return false;
+        if (!Poverty.findUnique(account.budget.accounts, account.id)) return false;
     }
 
     createBudget(name, currency = Poverty.CURRENCY.DEFAULT, period = Poverty.BUDGET.PERIOD.MONTHLY, 

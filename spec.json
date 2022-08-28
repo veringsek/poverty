@@ -39,9 +39,10 @@
                 "end?": "<Datetime>",
                 "over?": "string(return|keep)"
             },
-            "budgets": [ {
-                "id#(#.budgets[*].budgets)": "string",
+            "accounts": [ {
+                "id#(#.budgets[*].accounts)": "string",
                 "name": "string",
+                "budget": "string -> #.budgets[?].id",
                 "start": "<Datetime>",
                 "end": "<Datetime>",
                 "balance": "number.real",
@@ -61,7 +62,7 @@
         "note?": "string",
         "source?": "string -> #.pools[?].id",
         "target?": "string -> #.pools[?].id",
-        "budget?": "string -> #.budgets[?].budgets[?].id",
+        "budget?": "string -> #.budgets[?].accounts[?].id",
         "tags?": [ "string" ],
         "children": [ "string -> #.transactions[?].id" ],
         "parent": "string -> #.transactions[?].id"
