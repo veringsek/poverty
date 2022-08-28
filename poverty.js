@@ -108,9 +108,8 @@ class Poverty {
 
     validate() {
         // Structure Validation
-        let origin = this.data;
         try {
-            this.data = this.schema.validateSync(this.data);
+            this.data = this.schemas.root.validateSync(this.data);
         } catch (error) {
             return false;
         }
@@ -167,18 +166,26 @@ class Poverty {
         // return true;
     }
 
-    schema = yup.object({
-        meta: yup.object({
-            format: yup.string().required().test({
-                name: 'string(Poverty JSON)',
-                test: format => format === Poverty.JSON.FORMAT
+
+    schemas = {
+        root: yup.object({
+            meta: yup.object({
+                format: yup.string().required().test({
+                    name: 'string(Poverty JSON)',
+                    test: format => format === Poverty.JSON.FORMAT
+                }),
+                version: yup.string().required().test({
+                    name: 'string(M.N.P)',
+                    test: version => version === Poverty.JSON.VERSION
+                })
             }),
-            version: yup.string().required().test({
-                name: 'string(M.N.P)',
-                test: version => version === Poverty.JSON.VERSION
-            })
+            transactions: yup.array().of(this.schemas.transaction).required(),
+            templates: yup.array().required(),
+            currencies: yup.array().of(this.schemas.currency).required(),
+            pools: yup.array().of(this.schemas.pool).required(),
+            budgets: yup.array().of(this.schemas.budget).required()
         }),
-        transactions: yup.array().of(yup.object({
+        transaction: yup.object({
             id: yup.string().uuid(),
             item: yup.string().ensure(),
             type: yup.string().default(() => Poverty.TRANSACTION.TYPE.TRANSFER),
@@ -193,9 +200,8 @@ class Poverty {
             tags: yup.array().of(yup.string()).required().ensure(),
             children: yup.array().of(yup.string().uuid()).required().ensure(),
             parent: yup.string().uuid().nullable()
-        })).required(),
-        templates: yup.array().required(),
-        currencies: yup.array().of(yup.object({
+        }),
+        currency: yup.object({
             id: yup.string().uuid(),
             name: yup.string().ensure(),
             note: yup.string().ensure(),
@@ -203,16 +209,16 @@ class Poverty {
             format: yup.string().nullable(),
             visible: yup.bool().nullable(),
             default: yup.bool().nullable()
-        })).required(),
-        pools: yup.array().of(yup.object({
+        }),
+        pool: yup.object({
             id: yup.string().uuid(),
             name: yup.string(),
             currency: yup.string().uuid(),
             balance: yup.number().default(0),
             total: yup.bool().nullable(),
             note: yup.string().ensure()
-        })).required(),
-        budgets: yup.array().of(yup.object({
+        }),
+        budget: yup.object({
             id: yup.string().uuid(),
             name: yup.string(),
             currency: yup.string().nullable(),
@@ -222,17 +228,18 @@ class Poverty {
                 end: yup.date().nullable(),
                 over: yup.string().nullable()
             }),
-            accounts: yup.array().of(yup.object({
-                id: yup.string().uuid(),
-                name: yup.string().nullable(),
-                budget: yup.string().uuid(),
-                start: yup.date(),
-                end: yup.date(),
-                balance: yup.number().default(0),
-                visible: yup.bool().nullable()
-            })).required().ensure()
-        })).required()
-    });
+            accounts: yup.array().of(this.schemas.account).required().ensure()
+        }),
+        account: yup.object({
+            id: yup.string().uuid(),
+            name: yup.string().nullable(),
+            budget: yup.string().uuid(),
+            start: yup.date(),
+            end: yup.date(),
+            balance: yup.number().default(0),
+            visible: yup.bool().nullable()
+        })
+    };
 
     currencyOf(pool) {
         if (pool) {
