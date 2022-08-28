@@ -6,8 +6,6 @@ class Poverty {
         if (!data) {
             this.data = {
                 meta: {
-                    // format: "Poverty JSON",
-                    // version: Poverty.POVERTY_JSON_VERSION
                     format: Poverty.JSON.FORMAT,
                     VERSION: Poverty.JSON.VERSION
                 },
@@ -22,6 +20,78 @@ class Poverty {
         } else {
             this.data = data;
         }
+        this.schemas = {};
+        this.schemas.transaction = yup.object({
+            id: yup.string().uuid(),
+            item: yup.string().ensure(),
+            type: yup.string().default(() => Poverty.TRANSACTION.TYPE.TRANSFER),
+            price: yup.number().nullable(),
+            currency: yup.string().uuid().nullable(),
+            time: yup.date(),
+            logtime: yup.date(),
+            note: yup.string().ensure(),
+            source: yup.string().nullable(),
+            target: yup.string().nullable(),
+            budget: yup.string().nullable(),
+            tags: yup.array().of(yup.string()).required().ensure(),
+            children: yup.array().of(yup.string().uuid()).required().ensure(),
+            parent: yup.string().uuid().nullable()
+        });
+        this.schemas.currency = yup.object({
+            id: yup.string().uuid(),
+            name: yup.string().ensure(),
+            note: yup.string().ensure(),
+            exchange: yup.array().required().ensure(),
+            format: yup.string().nullable(),
+            visible: yup.bool().nullable(),
+            default: yup.bool().nullable()
+        });
+        this.schemas.pool = yup.object({
+            id: yup.string().uuid(),
+            name: yup.string(),
+            currency: yup.string().uuid(),
+            balance: yup.number().default(0),
+            total: yup.bool().nullable(),
+            note: yup.string().ensure()
+        });
+        this.schemas.account = yup.object({
+            id: yup.string().uuid(),
+            name: yup.string().nullable(),
+            budget: yup.string().uuid(),
+            start: yup.date(),
+            end: yup.date(),
+            balance: yup.number().default(0),
+            visible: yup.bool().nullable()
+        });
+        this.schemas.budget = yup.object({
+            id: yup.string().uuid(),
+            name: yup.string(),
+            currency: yup.string().nullable(),
+            automation: yup.object({
+                period: yup.string().nullable(),
+                start: yup.date(),
+                end: yup.date().nullable(),
+                over: yup.string().nullable()
+            }),
+            accounts: yup.array().of(this.schemas.account).required().ensure()
+        });
+        this.schemas.root = yup.object({
+            meta: yup.object({
+                format: yup.string().required().test({
+                    name: 'string(Poverty JSON)',
+                    test: format => format === Poverty.JSON.FORMAT
+                }),
+                version: yup.string().required().test({
+                    name: 'string(M.N.P)',
+                    test: version => version === Poverty.JSON.VERSION
+                })
+            }),
+            transactions: yup.array().of(this.schemas.transaction).required(),
+            templates: yup.array().required(),
+            currencies: yup.array().of(this.schemas.currency).required(),
+            pools: yup.array().of(this.schemas.pool).required(),
+            budgets: yup.array().of(this.schemas.budget).required()
+        });
         if (!this.validate()) {
             console.warn(`WTF`)
         }
@@ -115,7 +185,7 @@ class Poverty {
         }
         // Uniqueness Validation
         let uniques = [
-            this.ts, this.cs, this.ps, this.bs, 
+            this.ts, this.cs, this.ps, this.bs,
             // this.budget.map(budget => budget.accounts.map(account => account.id)).flat()
         ];
         for (let unique of uniques) {
@@ -123,23 +193,20 @@ class Poverty {
         }
         // Linking Validation
         let linkings = [{
-            ids: this.ts, 
-            linkers: [
+            ids: this.ts, linkers: [
                 this.transactions.map(transaction => transaction.source),
                 this.transactions.map(transaction => transaction.target),
                 this.transactions.map(transaction => transaction.children).flat(),
                 this.transactions.map(transaction => transaction.parent)
             ]
         }, {
-            ids: this.cs,
-            linkers: [
+            ids: this.cs, linkers: [
                 this.transactions.map(transaction => transaction.currency),
                 this.pools.map(pool => pool.currency),
                 this.budgets.map(budget => budget.currency)
             ]
         }, {
-            ids: this.bs,
-            linkers: [
+            ids: this.bs, linkers: [
                 this.transactions.map(transaction => transaction.budget),
                 this.budgets.map(budget => budget.accounts.map(account => account.budget)).flat()
             ]
@@ -152,94 +219,7 @@ class Poverty {
             }
         }
         return true;
-
-        // let arrays = [
-        //     this.transactions,
-        //     this.templates,
-        //     this.currencies,
-        //     this.pools,
-        //     this.budgets
-        // ];
-        // for (let array of arrays) {
-        //     if (Poverty.hasDuplicates(Poverty.ids(array))) return false;
-        // }
-        // return true;
     }
-
-
-    schemas = {
-        root: yup.object({
-            meta: yup.object({
-                format: yup.string().required().test({
-                    name: 'string(Poverty JSON)',
-                    test: format => format === Poverty.JSON.FORMAT
-                }),
-                version: yup.string().required().test({
-                    name: 'string(M.N.P)',
-                    test: version => version === Poverty.JSON.VERSION
-                })
-            }),
-            transactions: yup.array().of(this.schemas.transaction).required(),
-            templates: yup.array().required(),
-            currencies: yup.array().of(this.schemas.currency).required(),
-            pools: yup.array().of(this.schemas.pool).required(),
-            budgets: yup.array().of(this.schemas.budget).required()
-        }),
-        transaction: yup.object({
-            id: yup.string().uuid(),
-            item: yup.string().ensure(),
-            type: yup.string().default(() => Poverty.TRANSACTION.TYPE.TRANSFER),
-            price: yup.number().nullable(),
-            currency: yup.string().uuid().nullable(),
-            time: yup.date(),
-            logtime: yup.date(),
-            note: yup.string().ensure(),
-            source: yup.string().nullable(),
-            target: yup.string().nullable(),
-            budget: yup.string().nullable(),
-            tags: yup.array().of(yup.string()).required().ensure(),
-            children: yup.array().of(yup.string().uuid()).required().ensure(),
-            parent: yup.string().uuid().nullable()
-        }),
-        currency: yup.object({
-            id: yup.string().uuid(),
-            name: yup.string().ensure(),
-            note: yup.string().ensure(),
-            exchange: yup.array().required().ensure(),
-            format: yup.string().nullable(),
-            visible: yup.bool().nullable(),
-            default: yup.bool().nullable()
-        }),
-        pool: yup.object({
-            id: yup.string().uuid(),
-            name: yup.string(),
-            currency: yup.string().uuid(),
-            balance: yup.number().default(0),
-            total: yup.bool().nullable(),
-            note: yup.string().ensure()
-        }),
-        budget: yup.object({
-            id: yup.string().uuid(),
-            name: yup.string(),
-            currency: yup.string().nullable(),
-            automation: yup.object({
-                period: yup.string().nullable(),
-                start: yup.date(),
-                end: yup.date().nullable(),
-                over: yup.string().nullable()
-            }),
-            accounts: yup.array().of(this.schemas.account).required().ensure()
-        }),
-        account: yup.object({
-            id: yup.string().uuid(),
-            name: yup.string().nullable(),
-            budget: yup.string().uuid(),
-            start: yup.date(),
-            end: yup.date(),
-            balance: yup.number().default(0),
-            visible: yup.bool().nullable()
-        })
-    };
 
     currencyOf(pool) {
         if (pool) {
@@ -269,21 +249,6 @@ class Poverty {
         if (!Poverty.findUnique(this.transactions, transaction.id)) return false;
     }
 
-    // createTransaction(item = '', type = Poverty.TRANSACTION.TYPE.TRANSFER, price = null, currency = Poverty.CURRENCY.DEFAULT,
-    //     time = Poverty.TIME.NOW, note = '', source = null, target = null, budget = null, tags = []) {
-    //     let transaction = {
-    //         id: Poverty.autoId(this.transactions),
-    //         item, type, price, note, tags,
-    //         currency: this.currencyFrom(currency),
-    //         time: this.timeFrom(time),
-    //         logtime: this.timeFrom(Poverty.TIME.NOW),
-    //         source: this.pool(source)?.id,
-    //         target: this.pool(target)?.id,
-    //         budget: this.budget(budget)?.id,
-    //     };
-    //     this.transactions.push(transaction);
-    // }
-
     get templates() {
         return this.data.templates;
     }
@@ -302,17 +267,10 @@ class Poverty {
 
     validateCurrency(currency) {
         if (!currency) return false;
+        currency = this.schemas.currency.validateSync(currency);
         if (!Poverty.findUnique(this.currencies, currency.id)) return false;
-        if (currency.default && currency.id !== this.defaultCurrency) return false;
+        // if (currency.default && currency.id !== this.defaultCurrency) return false;
     }
-
-    // createCurrency(name, note = '', format = Poverty.CURRENCY.FORMAT.AMERICA, visible = true, def = false) {
-    //     let currency = {
-    //         id: Poverty.autoId(Poverty.ids(this.currencies)),
-    //         name, note, format, visible, default: def
-    //     };
-    //     this.currencies.push(currency);
-    // }
 
     get pools() {
         return this.data.pools;
@@ -330,16 +288,6 @@ class Poverty {
         if (!pool) return false;
         if (!Poverty.findUnique(this.pools, pool.id)) return false;
     }
-
-    // createPool(name, currency = Poverty.CURRENCY.DEFAULT, total = true, note = '') {
-    //     let pool = {
-    //         id: Poverty.autoId(Poverty.ids(this.pools)),
-    //         name, total, balance: 0, note,
-    //         currency: this.currencyFrom(currency)
-    //     };
-    //     this.pools.push(pool);
-    //     return pool;
-    // }
 
     get budgets() {
         return this.data.budgets;
@@ -363,20 +311,5 @@ class Poverty {
         if (!account) return false;
         if (!Poverty.findUnique(account.budget.accounts, account.id)) return false;
     }
-
-    // createBudget(name, currency = Poverty.CURRENCY.DEFAULT, period = Poverty.BUDGET.PERIOD.MONTHLY, 
-    //     start = Poverty.TIME.NOW, end = null, over = Poverty.BUDGET.OVER.RETURN) {
-    //     let budget = {
-    //         id: Poverty.autoId(Poverty.ids(this.budgets)),
-    //         name,
-    //         currency: this.currencyFrom(currency),
-    //         automation: {
-    //             period, end, over,
-    //             start: this.timeFrom(start)
-    //         }
-    //     };
-    //     this.budgets.push(budget);
-    //     return budget;
-    // }
 }
 module.exports = Poverty;
