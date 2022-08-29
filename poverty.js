@@ -145,25 +145,29 @@ class Poverty {
             Invalid: () => new TypeError(`Invalid Transaction.`),
             NotExist: id => new ReferenceError(`Transaction of ID ${id} not exists.`),
             InUse: id => new ReferenceError(`Transaction of ID ${id} is in use as a parent.`),
-            Duplicate: id => new ReferenceError(`ID of ${id} in Transactions is duplicated.`)
+            Duplicate: id => new ReferenceError(`ID of ${id} in Transactions is duplicated.`),
+            Duplicates: () => new ReferenceError(`Some IDs in Transactions are duplicated.`)
         },
         Currency: {
             Invalid: () => new TypeError(`Invalid Currency.`),
             NotExist: id => new ReferenceError(`Currency of ID ${id} not exists.`),
             InUse: id => new ReferenceError(`Currency of ID ${id} is in use.`),
-            Duplicate: id => new ReferenceError(`ID of ${id} in Currencies is duplicated.`)
+            Duplicate: id => new ReferenceError(`ID of ${id} in Currencies is duplicated.`),
+            Duplicates: () => new ReferenceError(`Some IDs in Currencies are duplicated.`)
         },
         Pool: {
             Invalid: () => new TypeError(`Invalid Pool.`),
             NotExist: id => new ReferenceError(`Pool of ID ${id} not exists.`),
             InUse: id => new ReferenceError(`Pool of ID ${id} is in use.`),
-            Duplicate: id => new ReferenceError(`ID of ${id} in Pools is duplicated.`)
+            Duplicate: id => new ReferenceError(`ID of ${id} in Pools is duplicated.`),
+            Duplicates: () => new ReferenceError(`Some IDs in Pools are duplicated.`)
         },
         Budget: {
             Invalid: () => new TypeError(`Invalid Budget.`),
             NotExist: id => new ReferenceError(`Budget of ID ${id} not exists.`),
             InUse: id => new ReferenceError(`Budget of ID ${id} is in use.`),
-            Duplicate: id => new ReferenceError(`ID of ${id} in Budgets is duplicated.`)
+            Duplicate: id => new ReferenceError(`ID of ${id} in Budgets is duplicated.`),
+            Duplicates: () => new ReferenceError(`Some IDs in Budgets are duplicated.`)
         },
         Account: {
             Invalid: () => new TypeError(`Invalid Account.`),
@@ -226,12 +230,20 @@ class Poverty {
             throw error;
         }
         // Uniqueness Validation
-        let uniques = [
-            this.ts, this.cs, this.ps, this.bs,
-            // this.budget.map(budget => budget.accounts.map(account => account.id)).flat()
-        ];
-        for (let unique of uniques) {
-            if (Poverty.hasDuplicates(unique)) throw Poverty.Error.Poverty.HasDuplicates(unique);
+        let uniques = [{
+            error: Poverty.Error.Transaction.Duplicates, unique: this.ts
+        }, {
+            error: Poverty.Error.Currency.Duplicates, unique: this.cs
+        }, {
+            error: Poverty.Error.Pool.Duplicates, unique: this.ps
+        }, {
+            error: Poverty.Error.Budget.Duplicates, unique: this.bs
+        }, {
+            error: Poverty.Error.Account.Duplicates,
+            unique: this.budgets.map(budget => budget.accounts).flat().map(account => account.id)
+        }];
+        for (let { error, unique } of uniques) {
+            if (Poverty.hasDuplicates(unique)) throw error();
         }
         // Linking Validation
         let linkings = [{
