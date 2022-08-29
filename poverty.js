@@ -139,13 +139,22 @@ class Poverty {
 
     static Error = {
         Invalid: {
-            Currency: () => new TypeError(`Invalid Currency.`)
+            Currency: () => new TypeError(`Invalid Currency.`),
+            Pool: () => new TypeError(`Invalid Pool.`),
+            Budget: () => new TypeError(`Invalid Budget.`),
+            Account: () => new TypeError(`Invalid Account.`)
         },
         NotExist: {
-            Currency: id => new ReferenceError(`Currency of ID ${id} not exists.`)
+            Currency: id => new ReferenceError(`Currency of ID ${id} not exists.`),
+            Pool: id => new ReferenceError(`Pool of ID ${id} not exists.`),
+            Budget: id => new ReferenceError(`Budget of ID ${id} not exists.`),
+            Account: id => new ReferenceError(`Account of ID ${id} not exists.`)
         },
         InUse: {
-            Currency: id => new ReferenceError(`Currency of ID ${id} is in use.`)
+            Currency: id => new ReferenceError(`Currency of ID ${id} is in use.`),
+            Pool: id => new ReferenceError(`Pool of ID ${id} is in use.`),
+            Budget: id => new ReferenceError(`Budget of ID ${id} is in use.`),
+            Account: id => new ReferenceError(`Account of ID ${id} is in use.`)
         }
     };
 
@@ -163,18 +172,6 @@ class Poverty {
         if (founds.length < 1) return returnDefault;
         if (founds.length > 1 && returnDuplicates !== undefined) return returnDuplicates;
         return founds[0];
-    }
-
-    static inObject(key, object) {
-        return Object.keys(object).includes(key);
-    }
-
-    static ofObject(value, object) {
-        return Object.values(object).includes(value);
-    }
-
-    static hasDuplicates(array) {
-        return (new Set(array)).size !== array.length;
     }
 
     static ids(array) {
@@ -200,7 +197,7 @@ class Poverty {
             // this.budget.map(budget => budget.accounts.map(account => account.id)).flat()
         ];
         for (let unique of uniques) {
-            if (Poverty.hasDuplicates(unique)) return false;
+            if ((new Set(unique)).size !== unique.length) return false;
         }
         // Linking Validation
         let linkings = [{
@@ -284,8 +281,6 @@ class Poverty {
         if (!currency) return false;
         currency = this.schemas.currency.validateSync(currency);
         return currency;
-        // if (!Poverty.findUnique(this.currencies, currency.id)) return false;
-        // if (currency.default && currency.id !== this.defaultCurrency) return false;
     }
 
     insertCurrency(currency) {
@@ -338,6 +333,39 @@ class Poverty {
         if (!Poverty.findUnique(this.pools, pool.id)) return false;
     }
 
+    insertPool(pool) {
+        if (!('id' in pool)) {
+            pool.id = Poverty.uuid(this.ps);
+        }
+        pool = this.validatePool(pool);
+        if (!pool) return false;
+        if (this.ps.includes(pool.id)) return false;
+        this.pools.push(pool);
+    }
+
+    updatePool(pool) {
+        pool = this.validatePool(pool);
+        if (!pool) return false;
+        let existing = this.pool(pool.id);
+        if (!existing) return false;
+        for (let key in pool) {
+            existing[key] = pool[key];
+        }
+    }
+
+    deletePool(poolId) {
+        let pool = this.pool(poolId);
+        if (!pool) throw Poverty.Error.NotExist.Pool(poolId);
+        let linkers = [this.transactions, this.templates, this.budgets];
+        for (let linker of linkers) {
+            if (linker.some(link => link.pool === poolId)) {
+                throw Poverty.Error.InUse.Pool(poolId);
+            }
+        }
+        let p = this.pools.indexOf(pool);
+        return this.pools.splice(p, 1);
+    }
+
     get budgets() {
         return this.data.budgets;
     }
@@ -354,6 +382,38 @@ class Poverty {
         if (!budget) return false;
         if (!Poverty.findUnique(this.budgets, budget.id)) return false;
         if (Poverty.hasDuplicates(budget.accounts.map(account => account.id))) return false;
+    }
+
+    insertBudget(budget) {
+        if (!('id' in budget)) {
+            budget.id = Poverty.uuid(this.bs);
+        }
+        budget = this.validateBudget(budget);
+        if (!budget) return false;
+        if (this.bs.includes(budget.id)) return false;
+        this.budgets.push(budget);
+    }
+
+    updateBudget(budget) {
+        budget = this.validateBudget(budget);
+        if (!budget) return false;
+        let existing = this.budget(budget.id);
+        if (!existing) return false;
+        for (let key in budget) {
+            existing[key] = budget[key];
+        }
+    }
+
+    deleteBudget(budgetId) {
+        let budget = this.budget(budgetId);
+        if (!budget) throw Poverty.Error.NotExist.Pool(budgetId);
+        for (let account of budget.accounts) {
+            if (this.transactions.some(transaction => transaction.budget === account.id)) {
+                throw Poverty.Error.InUse.Account(account.id);
+            }
+        }
+        let b = this.budgets.indexOf(budget);
+        return this.budgets.splice(b, 1);
     }
 
     validateAccount(account) {
