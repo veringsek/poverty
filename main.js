@@ -7,7 +7,7 @@ let DEV = {
     TEST_JSON: './test/test.json'
 };
 
-function save(poverty = poverty, path = DEV.TEST_JSON) {
+function save(poverty = pv, path = DEV.TEST_JSON) {
     let data = poverty.data;
     fs.writeFileSync(path, JSON.stringify(data, null, '\t'));
 }

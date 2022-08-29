@@ -174,6 +174,20 @@ class Poverty {
         return founds[0];
     }
 
+    static setDefaults(object, defaults) {
+        for (let key in defaults) {
+            if (!(key in object)) {
+                try {
+                    object[key] = defaults[key]();
+                } catch (error) {
+                    if (error instanceof TypeError) {
+                        object[key] = defaults[key];
+                    }
+                }
+            }
+        }
+    }
+
     static ids(array) {
         return array.map(element => element.id);
     }
@@ -284,9 +298,9 @@ class Poverty {
     }
 
     insertCurrency(currency) {
-        if (!('id' in currency)) {
-            currency.id = Poverty.uuid(this.cs);
-        }
+        Poverty.setDefaults(currency, {
+            id: () => Poverty.uuid(this.cs)
+        });
         currency = this.validateCurrency(currency);
         if (!currency) return false;
         if (this.cs.includes(currency.id)) return false;
@@ -334,9 +348,11 @@ class Poverty {
     }
 
     insertPool(pool) {
-        if (!('id' in pool)) {
-            pool.id = Poverty.uuid(this.ps);
-        }
+        Poverty.setDefaults(pool, {
+            id: () => Poverty.uuid(this.ps),
+            currency: () => this.defaultCurrency,
+            balance: 0
+        });
         pool = this.validatePool(pool);
         if (!pool) return false;
         if (this.ps.includes(pool.id)) return false;
@@ -385,9 +401,14 @@ class Poverty {
     }
 
     insertBudget(budget) {
-        if (!('id' in budget)) {
-            budget.id = Poverty.uuid(this.bs);
-        }
+        Poverty.setDefaults(budget, {
+            id: () => Poverty.uuid(this.bs),
+            currency: () => this.defaultCurrency,
+            automation: () => ({
+                start: Poverty.timeFrom(Poverty.TIME.NOW)
+            }),
+            accounts: []
+        });
         budget = this.validateBudget(budget);
         if (!budget) return false;
         if (this.bs.includes(budget.id)) return false;
@@ -419,6 +440,12 @@ class Poverty {
     validateAccount(account) {
         if (!account) return false;
         if (!Poverty.findUnique(account.budget.accounts, account.id)) return false;
+    }
+
+    // Dev
+
+    u(id = 0) {
+        return `00000000-0000-0000-0000-${id.toString().padStart(12, '0')}`
     }
 }
 module.exports = Poverty;

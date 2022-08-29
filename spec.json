@@ -7,11 +7,11 @@
             "format*": "string(Poverty JSON)",
             "version*": "string(M.N.P)"
         },
-        "transactions": [ "<Transaction>" ],
-        "templates": [ "<Transaction>" ],
-        "currencies": [ {
+        "transactions*": [ "<Transaction>" ],
+        "templates*": [ "<Transaction>" ],
+        "currencies*": [ {
             "id#": "string",
-            "name?": "string",
+            "name*": "string",
             "note?": "string",
             "exchange?": [ {
                 "target#": "string -> #.currencies[?].id",
@@ -21,31 +21,31 @@
             "visible?": true,
             "default?!": true
         } ],
-        "pools": [ {
+        "pools*": [ {
             "id#": "string",
-            "name": "string",
-            "currency": "string -> #.currencies[?].id",
-            "balance": "number.real",
+            "name*": "string",
+            "currency*": "string -> #.currencies[?].id",
+            "balance*": "number.real",
             "total?": true,
             "note?": "string"
         } ],
-        "budgets": [ {
+        "budgets*": [ {
             "id#": "string",
-            "name": "string",
-            "currency": "string -> #.currencies[?].id",
-            "automation": {
+            "name*": "string",
+            "currency*": "string -> #.currencies[?].id",
+            "automation*": {
                 "period?": "string(weekly|monthly|annual)",
-                "start": "<Datetime>",
+                "start*": "<Datetime>",
                 "end?": "<Datetime>",
                 "over?": "string(return|keep)"
             },
-            "accounts": [ {
+            "accounts*": [ {
                 "id#(#.budgets[*].accounts)": "string",
-                "name": "string",
-                "budget": "string -> #.budgets[?].id",
-                "start": "<Datetime>",
-                "end": "<Datetime>",
-                "balance": "number.real",
+                "name?": "string",
+                "budget*": "string -> #.budgets[?].id",
+                "start*": "<Datetime>",
+                "end*": "<Datetime>",
+                "balance*": "number.real",
                 "visible?": true
             } ]
         } ]
@@ -53,18 +53,18 @@
     "<Datetime>": "number.datetime",
     "<Transaction>": {
         "id#(#.transactions)": "string",
-        "item?": "string",
-        "type?": "string(transfer|balance)",
+        "item*": "string",
+        "type*": "string(transfer|balance)",
         "price?": "number.real",
-        "currency?": "string -> #.currencies[?].id",
-        "time": "<Datetime>",
+        "currency*": "string -> #.currencies[?].id",
+        "time*": "<Datetime>",
         "logtime*": "<Datetime>",
         "note?": "string",
         "source?": "string -> #.pools[?].id",
         "target?": "string -> #.pools[?].id",
         "budget?": "string -> #.budgets[?].accounts[?].id",
         "tags?": [ "string" ],
-        "children": [ "string -> #.transactions[?].id" ],
-        "parent": "string -> #.transactions[?].id"
+        "children*": [ "string -> #.transactions[?].id" ],
+        "parent?": "string -> #.transactions[?].id"
     }
 }
