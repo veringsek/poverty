@@ -166,6 +166,10 @@ class Poverty {
         return id;
     }
 
+    static hasDuplicates(array) {
+        return (new Set(array)).size !== array.length;
+    }
+
     static findUnique(array, value, key = 'id', returnDefault = null, returnDuplicates) {
         let predicate = element => element[key] === value;
         let founds = array.filter(predicate);
@@ -211,7 +215,7 @@ class Poverty {
             // this.budget.map(budget => budget.accounts.map(account => account.id)).flat()
         ];
         for (let unique of uniques) {
-            if ((new Set(unique)).size !== unique.length) return false;
+            if (Poverty.hasDuplicates(unique)) return false;
         }
         // Linking Validation
         let linkings = [{
@@ -445,7 +449,7 @@ class Poverty {
     // Dev
 
     u(id = 0) {
-        return `00000000-0000-0000-0000-${id.toString().padStart(12, '0')}`
+        return `67d2c9ca-1111-468a-b8f7-${id.toString().padStart(12, '0')}`
     }
 }
 module.exports = Poverty;
