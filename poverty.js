@@ -102,7 +102,6 @@ class Poverty {
         VERSION: '0.0.1'
     };
 
-    // static POVERTY_JSON_VERSION = '0.0.1';
     static ID_AUTO_ASSIGN = '+';
 
     static TRANSACTION = {
@@ -138,6 +137,18 @@ class Poverty {
         NOW: '<TIME.NOW>'
     };
 
+    static Error = {
+        Invalid: {
+            Currency: () => new TypeError(`Invalid Currency.`)
+        },
+        NotExist: {
+            Currency: id => new ReferenceError(`Currency of ID ${id} not exists.`)
+        },
+        InUse: {
+            Currency: id => new ReferenceError(`Currency of ID ${id} is in use.`)
+        }
+    };
+
     static uuid(existings = []) {
         let id;
         do {
@@ -146,7 +157,7 @@ class Poverty {
         return id;
     }
 
-    static findUnique(array, value, key = 'id', returnDefault = null, returnDuplicates = undefined) {
+    static findUnique(array, value, key = 'id', returnDefault = null, returnDuplicates) {
         let predicate = element => element[key] === value;
         let founds = array.filter(predicate);
         if (founds.length < 1) return returnDefault;
@@ -265,11 +276,49 @@ class Poverty {
         return Poverty.findUnique(this.currencies, true, 'default').id;
     }
 
+    currency(currencyId) {
+        return Poverty.findUnique(this.currencies, currencyId);
+    }
+
     validateCurrency(currency) {
         if (!currency) return false;
         currency = this.schemas.currency.validateSync(currency);
-        if (!Poverty.findUnique(this.currencies, currency.id)) return false;
+        return currency;
+        // if (!Poverty.findUnique(this.currencies, currency.id)) return false;
         // if (currency.default && currency.id !== this.defaultCurrency) return false;
+    }
+
+    insertCurrency(currency) {
+        if (!('id' in currency)) {
+            currency.id = Poverty.uuid(this.cs);
+        }
+        currency = this.validateCurrency(currency);
+        if (!currency) return false;
+        if (this.cs.includes(currency.id)) return false;
+        this.currencies.push(currency);
+    }
+
+    updateCurrency(currency) {
+        currency = this.validateCurrency(currency);
+        if (!currency) return false;
+        let existing = this.currency(currency.id);
+        if (!existing) return false;
+        for (let key in currency) {
+            existing[key] = currency[key];
+        }
+    }
+
+    deleteCurrency(currencyId) {
+        let currency = this.currency(currencyId);
+        if (!currency) throw Poverty.Error.NotExist.Currency(currencyId);
+        let linkers = [this.transactions, this.templates, this.pools, this.budgets];
+        for (let linker of linkers) {
+            if (linker.some(link => link.currency === currencyId)) {
+                throw Poverty.Error.InUse.Currency(currencyId);
+            }
+        }
+        let c = this.currencies.indexOf(currency);
+        return this.currencies.splice(c, 1);
     }
 
     get pools() {
