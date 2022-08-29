@@ -23,7 +23,7 @@ class Poverty {
         this.schemas = {};
         this.schemas.transaction = yup.object({
             id: yup.string().uuid(),
-            item: yup.string().ensure(),
+            name: yup.string().ensure(),
             type: yup.string().default(() => Poverty.TRANSACTION.TYPE.TRANSFER),
             price: yup.number().nullable(),
             currency: yup.string().uuid().nullable(),
@@ -38,7 +38,7 @@ class Poverty {
             parent: yup.string().uuid().nullable()
         });
         this.schemas.currency = yup.object({
-            id: yup.string().uuid(),
+            id: yup.string(),
             name: yup.string().ensure(),
             note: yup.string().ensure(),
             exchange: yup.array().required().ensure(),
@@ -138,24 +138,44 @@ class Poverty {
     };
 
     static Error = {
-        Invalid: {
-            Currency: () => new TypeError(`Invalid Currency.`),
-            Pool: () => new TypeError(`Invalid Pool.`),
-            Budget: () => new TypeError(`Invalid Budget.`),
-            Account: () => new TypeError(`Invalid Account.`)
+        Currency: {
+            Invalid: () => new TypeError(`Invalid Currency.`),
+            NotExist: id => new ReferenceError(`Currency of ID ${id} not exists.`),
+            InUse: id => new ReferenceError(`Currency of ID ${id} is in use.`),
         },
-        NotExist: {
-            Currency: id => new ReferenceError(`Currency of ID ${id} not exists.`),
-            Pool: id => new ReferenceError(`Pool of ID ${id} not exists.`),
-            Budget: id => new ReferenceError(`Budget of ID ${id} not exists.`),
-            Account: id => new ReferenceError(`Account of ID ${id} not exists.`)
+        Pool: {
+            Invalid: () => new TypeError(`Invalid Pool.`),
+            NotExist: id => new ReferenceError(`Pool of ID ${id} not exists.`),
+            InUse: id => new ReferenceError(`Pool of ID ${id} is in use.`)
         },
-        InUse: {
-            Currency: id => new ReferenceError(`Currency of ID ${id} is in use.`),
-            Pool: id => new ReferenceError(`Pool of ID ${id} is in use.`),
-            Budget: id => new ReferenceError(`Budget of ID ${id} is in use.`),
-            Account: id => new ReferenceError(`Account of ID ${id} is in use.`)
+        Budget: {
+            Invalid: () => new TypeError(`Invalid Budget.`),
+            NotExist: id => new ReferenceError(`Budget of ID ${id} not exists.`),
+            InUse: id => new ReferenceError(`Budget of ID ${id} is in use.`)
+        },
+        Account: {
+            Invalid: () => new TypeError(`Invalid Account.`),
+            NotExist: id => new ReferenceError(`Account of ID ${id} not exists.`),
+            InUse: id => new ReferenceError(`Account of ID ${id} is in use.`)
         }
+        // Invalid: {
+        //     Currency: () => new TypeError(`Invalid Currency.`),
+        //     Pool: () => new TypeError(`Invalid Pool.`),
+        //     Budget: () => new TypeError(`Invalid Budget.`),
+        //     Account: () => new TypeError(`Invalid Account.`)
+        // },
+        // NotExist: {
+        //     Currency: id => new ReferenceError(`Currency of ID ${id} not exists.`),
+        //     Pool: id => new ReferenceError(`Pool of ID ${id} not exists.`),
+        //     Budget: id => new ReferenceError(`Budget of ID ${id} not exists.`),
+        //     Account: id => new ReferenceError(`Account of ID ${id} not exists.`)
+        // },
+        // InUse: {
+        //     Currency: id => new ReferenceError(`Currency of ID ${id} is in use.`),
+        //     Pool: id => new ReferenceError(`Pool of ID ${id} is in use.`),
+        //     Budget: id => new ReferenceError(`Budget of ID ${id} is in use.`),
+        //     Account: id => new ReferenceError(`Account of ID ${id} is in use.`)
+        // }
     };
 
     static uuid(existings = []) {
@@ -273,6 +293,24 @@ class Poverty {
     validateTransaction(transaction) {
         if (!transaction) return false;
         if (!Poverty.findUnique(this.transactions, transaction.id)) return false;
+        if (transaction.children.some(child => !this.ts.includes(child))) return false;
+        ////////////////////////////////////////////////////////////////////////////////////////////////////
+    }
+
+    insertTransaction(transaction) {
+        Poverty.setDefaults(transaction, {
+            id: () => Poverty.uuid(this.ts),
+            name: '',
+            type: Poverty.TRANSACTION.TYPE.TRANSFER,
+            currency: () => this.defaultCurrency,
+            time: () => Poverty.timeFrom(Poverty.TIME.NOW),
+            logtime: () => Poverty.timeFrom(Poverty.TIME.NOW),
+            children: []
+        });
+        transaction = this.validateTransaction(transaction);
+        if (!transaction) return false;
+        if (this.ts.includes(transaction.id)) return false;
+        this.transactions.push(transaction);
     }
 
     get templates() {
@@ -323,11 +361,11 @@ class Poverty {
 
     deleteCurrency(currencyId) {
         let currency = this.currency(currencyId);
-        if (!currency) throw Poverty.Error.NotExist.Currency(currencyId);
+        if (!currency) throw Poverty.Error.Currency.NotExist(currencyId);
         let linkers = [this.transactions, this.templates, this.pools, this.budgets];
         for (let linker of linkers) {
             if (linker.some(link => link.currency === currencyId)) {
-                throw Poverty.Error.InUse.Currency(currencyId);
+                throw Poverty.Error.Currency.InUse(currencyId);
             }
         }
         let c = this.currencies.indexOf(currency);
@@ -375,11 +413,11 @@ class Poverty {
 
     deletePool(poolId) {
         let pool = this.pool(poolId);
-        if (!pool) throw Poverty.Error.NotExist.Pool(poolId);
+        if (!pool) throw Poverty.Error.Pool.NotExist(poolId);
         let linkers = [this.transactions, this.templates, this.budgets];
         for (let linker of linkers) {
             if (linker.some(link => link.pool === poolId)) {
-                throw Poverty.Error.InUse.Pool(poolId);
+                throw Poverty.Error.Pool.InUse(poolId);
             }
         }
         let p = this.pools.indexOf(pool);
@@ -431,10 +469,10 @@ class Poverty {
 
     deleteBudget(budgetId) {
         let budget = this.budget(budgetId);
-        if (!budget) throw Poverty.Error.NotExist.Pool(budgetId);
+        if (!budget) throw Poverty.Error.Pool.NotExist(budgetId);
         for (let account of budget.accounts) {
             if (this.transactions.some(transaction => transaction.budget === account.id)) {
-                throw Poverty.Error.InUse.Account(account.id);
+                throw Poverty.Error.Account.InUse(account.id);
             }
         }
         let b = this.budgets.indexOf(budget);

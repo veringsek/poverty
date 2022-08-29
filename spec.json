@@ -53,7 +53,7 @@
     "<Datetime>": "number.datetime",
     "<Transaction>": {
         "id#(#.transactions)": "string",
-        "item*": "string",
+        "name*": "string",
         "type*": "string(transfer|balance)",
         "price?": "number.real",
         "currency*": "string -> #.currencies[?].id",
