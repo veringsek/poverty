@@ -26,7 +26,7 @@ class Poverty {
             name: yup.string().ensure(),
             type: yup.string().default(() => Poverty.TRANSACTION.TYPE.TRANSFER),
             price: yup.number().nullable(),
-            currency: yup.string().uuid().nullable(),
+            currency: yup.string(),
             time: yup.date(),
             logtime: yup.date(),
             note: yup.string().ensure(),
@@ -49,7 +49,7 @@ class Poverty {
         this.Schemas.Pool = yup.object({
             id: yup.string().uuid(),
             name: yup.string(),
-            currency: yup.string().uuid(),
+            currency: yup.string(),
             balance: yup.number().default(0),
             total: yup.bool().nullable(),
             note: yup.string().ensure()
@@ -66,7 +66,7 @@ class Poverty {
         this.Schemas.Budget = yup.object({
             id: yup.string().uuid(),
             name: yup.string(),
-            currency: yup.string().nullable(),
+            currency: yup.string(),
             automation: yup.object({
                 period: yup.string().nullable(),
                 start: yup.date(),
