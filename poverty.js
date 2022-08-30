@@ -146,7 +146,8 @@ class Poverty {
             NotExist: id => new ReferenceError(`Transaction of ID ${id} not exists.`),
             InUse: id => new ReferenceError(`Transaction of ID ${id} is in use as a parent.`),
             Duplicate: id => new ReferenceError(`ID of ${id} in Transactions is duplicated.`),
-            Duplicates: () => new ReferenceError(`Some IDs in Transactions are duplicated.`)
+            Duplicates: () => new ReferenceError(`Some IDs in Transactions are duplicated.`),
+            ParentOfSelf: id => new ReferenceError(`The parent of a transaction cannot be itself: ${id}`)
         },
         Currency: {
             Invalid: () => new TypeError(`Invalid Currency.`),
@@ -300,6 +301,10 @@ class Poverty {
         return this.transactions.map(transaction => transaction.id);
     }
 
+    transaction(transactionId) {
+        return Poverty.findUnique(this.transactions, transactionId);
+    }
+
     validateTransaction(transaction) {
         if (!transaction) throw Poverty.Error.Transaction.Invalid();
         if (!Poverty.findUnique(this.transactions, transaction.id)) {
@@ -308,6 +313,13 @@ class Poverty {
         for (let child of transaction.children) {
             if (!this.ts.includes(child)) {
                 throw Poverty.Error.Transaction.NotExist(child);
+            }
+        }
+        if (transaction.parent) {
+            if (!this.ts.includes(transaction.parent)) {
+                throw Poverty.Error.Transaction.NotExist(transaction.parent);
+            } else if (transaction.parent === transaction.id) {
+                throw Poverty.Error.Transaction.ParentOfSelf(transaction.parent);
             }
         }
     }
@@ -328,6 +340,29 @@ class Poverty {
             throw Poverty.Error.Transaction.Duplicate(transaction.id);
         }
         this.transactions.push(transaction);
+    }
+
+    updateTransaction(transaction) {
+        transaction = this.validateTransaction(transaction);
+        if (!transaction) throw Poverty.Error.Transaction.Invalid();
+        let existing = this.transaction(transaction.id);
+        if (!existing) throw Poverty.Error.Transaction.NotExist(transaction.id);
+        for (let key in transaction) {
+            existing[key] = transaction[key];
+        }
+    }
+
+    deleteTransaction(transactionId) {
+        let transaction = this.transaction(transactionId);
+        if (!transaction) throw Poverty.Error.Transaction.NotExist(transaction.id);
+        if (this.transactions.some(transaction => transaction.parent === transaction.id)) {
+            throw Poverty.Error.Transaction.InUse(transaction.id);
+        }
+        for (let link of this.transactions) {
+            link.children = link.children.filter(child => child !== transaction.id);
+        }
+        let t = this.transactions.indexOf(transaction);
+        return this.transactions.splice(t, 1);
     }
 
     get templates() {
