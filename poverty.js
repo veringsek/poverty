@@ -22,7 +22,7 @@ class Poverty {
         }
         this.Schemas = {};
         this.Schemas.Transaction = yup.object({
-            id: yup.string().uuid(),
+            id: yup.string(),
             name: yup.string().ensure(),
             type: yup.string().default(() => Poverty.TRANSACTION.TYPE.TRANSFER),
             price: yup.number().nullable(),
@@ -34,8 +34,8 @@ class Poverty {
             target: yup.string().nullable(),
             budget: yup.string().nullable(),
             tags: yup.array().of(yup.string()).required().ensure(),
-            children: yup.array().of(yup.string().uuid()).required().ensure(),
-            parent: yup.string().uuid().nullable()
+            children: yup.array().of(yup.string()).required().ensure(),
+            parent: yup.string().nullable()
         });
         this.Schemas.Currency = yup.object({
             id: yup.string(),
@@ -47,7 +47,7 @@ class Poverty {
             default: yup.bool().nullable()
         });
         this.Schemas.Pool = yup.object({
-            id: yup.string().uuid(),
+            id: yup.string(),
             name: yup.string(),
             currency: yup.string(),
             balance: yup.number().default(0),
@@ -55,16 +55,16 @@ class Poverty {
             note: yup.string().ensure()
         });
         this.Schemas.Account = yup.object({
-            id: yup.string().uuid(),
+            id: yup.string(),
             name: yup.string().nullable(),
-            budget: yup.string().uuid(),
+            budget: yup.string(),
             start: yup.date(),
             end: yup.date(),
             balance: yup.number().default(0),
             visible: yup.bool().nullable()
         });
         this.Schemas.Budget = yup.object({
-            id: yup.string().uuid(),
+            id: yup.string(),
             name: yup.string(),
             currency: yup.string(),
             automation: yup.object({
