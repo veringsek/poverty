@@ -20,8 +20,8 @@ class Poverty {
         } else {
             this.data = data;
         }
-        this.schemas = {};
-        this.schemas.transaction = yup.object({
+        this.Schemas = {};
+        this.Schemas.Transaction = yup.object({
             id: yup.string().uuid(),
             name: yup.string().ensure(),
             type: yup.string().default(() => Poverty.TRANSACTION.TYPE.TRANSFER),
@@ -37,7 +37,7 @@ class Poverty {
             children: yup.array().of(yup.string().uuid()).required().ensure(),
             parent: yup.string().uuid().nullable()
         });
-        this.schemas.currency = yup.object({
+        this.Schemas.Currency = yup.object({
             id: yup.string(),
             name: yup.string().ensure(),
             note: yup.string().ensure(),
@@ -46,7 +46,7 @@ class Poverty {
             visible: yup.bool().nullable(),
             default: yup.bool().nullable()
         });
-        this.schemas.pool = yup.object({
+        this.Schemas.Pool = yup.object({
             id: yup.string().uuid(),
             name: yup.string(),
             currency: yup.string().uuid(),
@@ -54,7 +54,7 @@ class Poverty {
             total: yup.bool().nullable(),
             note: yup.string().ensure()
         });
-        this.schemas.account = yup.object({
+        this.Schemas.Account = yup.object({
             id: yup.string().uuid(),
             name: yup.string().nullable(),
             budget: yup.string().uuid(),
@@ -63,7 +63,7 @@ class Poverty {
             balance: yup.number().default(0),
             visible: yup.bool().nullable()
         });
-        this.schemas.budget = yup.object({
+        this.Schemas.Budget = yup.object({
             id: yup.string().uuid(),
             name: yup.string(),
             currency: yup.string().nullable(),
@@ -73,9 +73,9 @@ class Poverty {
                 end: yup.date().nullable(),
                 over: yup.string().nullable()
             }),
-            accounts: yup.array().of(this.schemas.account).required().ensure()
+            accounts: yup.array().of(this.Schemas.Account).required().ensure()
         });
-        this.schemas.root = yup.object({
+        this.Schemas.Root = yup.object({
             meta: yup.object({
                 format: yup.string().required().test({
                     name: 'string(Poverty JSON)',
@@ -86,11 +86,11 @@ class Poverty {
                     test: version => version === Poverty.JSON.VERSION
                 })
             }),
-            transactions: yup.array().of(this.schemas.transaction).required(),
+            transactions: yup.array().of(this.Schemas.Transaction).required(),
             templates: yup.array().required(),
-            currencies: yup.array().of(this.schemas.currency).required(),
-            pools: yup.array().of(this.schemas.pool).required(),
-            budgets: yup.array().of(this.schemas.budget).required()
+            currencies: yup.array().of(this.Schemas.Currency).required(),
+            pools: yup.array().of(this.Schemas.Pool).required(),
+            budgets: yup.array().of(this.Schemas.Budget).required()
         });
         if (!this.validate()) {
             console.warn(`WTF`)
@@ -226,7 +226,7 @@ class Poverty {
     validate() {
         // Structure Validation
         try {
-            this.data = this.schemas.root.validateSync(this.data);
+            this.data = this.Schemas.Root.validateSync(this.data);
         } catch (error) {
             throw error;
         }
@@ -307,9 +307,10 @@ class Poverty {
 
     validateTransaction(transaction) {
         if (!transaction) throw Poverty.Error.Transaction.Invalid();
-        if (!Poverty.findUnique(this.transactions, transaction.id)) {
-            throw Poverty.Error.Transaction.Duplicate(transaction.id);
-        }
+        transaction = this.Schemas.Transaction.validateSync(transaction);
+        // if (!Poverty.findUnique(this.transactions, transaction.id)) {
+        //     throw Poverty.Error.Transaction.Duplicate(transaction.id);
+        // }
         for (let child of transaction.children) {
             if (!this.ts.includes(child)) {
                 throw Poverty.Error.Transaction.NotExist(child);
@@ -322,6 +323,7 @@ class Poverty {
                 throw Poverty.Error.Transaction.ParentOfSelf(transaction.parent);
             }
         }
+        return transaction;
     }
 
     insertTransaction(transaction) {
@@ -387,7 +389,7 @@ class Poverty {
 
     validateCurrency(currency) {
         if (!currency) throw Poverty.Error.Currency.Invalid();
-        currency = this.schemas.currency.validateSync(currency);
+        currency = this.Schemas.Currency.validateSync(currency);
         return currency;
     }
 
@@ -440,9 +442,11 @@ class Poverty {
 
     validatePool(pool) {
         if (!pool) throw Poverty.Error.Pool.Invalid();
-        if (!Poverty.findUnique(this.pools, pool.id)) {
-            throw Poverty.Error.Pool.Duplicate(pool.id);
-        }
+        pool = this.Schemas.Pool.validateSync(pool);
+        return pool;
+        // if (!Poverty.findUnique(this.pools, pool.id)) {
+        //     throw Poverty.Error.Pool.Duplicate(pool.id);
+        // }
     }
 
     insertPool(pool) {
@@ -496,12 +500,14 @@ class Poverty {
 
     validateBudget(budget) {
         if (!budget) throw Poverty.Error.Budget.Invalid();
-        if (!Poverty.findUnique(this.budgets, budget.id)) {
-            throw Poverty.Error.Budget.Duplicate(budget.id);
-        }
+        budget = this.Schemas.Budget.validateSync(budget);
+        // if (!Poverty.findUnique(this.budgets, budget.id)) {
+        //     throw Poverty.Error.Budget.Duplicate(budget.id);
+        // }
         if (Poverty.hasDuplicates(budget.accounts.map(account => account.id))) {
             throw Poverty.Error.Account.Duplicates();
         }
+        return budget;
     }
 
     insertBudget(budget) {
@@ -533,7 +539,7 @@ class Poverty {
 
     deleteBudget(budgetId) {
         let budget = this.budget(budgetId);
-        if (!budget) throw Poverty.Error.Pool.NotExist(budgetId);
+        if (!budget) throw Poverty.Error.Budget.NotExist(budgetId);
         for (let account of budget.accounts) {
             if (this.transactions.some(transaction => transaction.budget === account.id)) {
                 throw Poverty.Error.Account.InUse(account.id);
@@ -545,9 +551,11 @@ class Poverty {
 
     validateAccount(account) {
         if (!account) throw Poverty.Error.Account.Invalid();
-        if (!Poverty.findUnique(account.budget.accounts, account.id)) {
-            throw Poverty.Error.Account.Duplicate(account.id);
-        }
+        account = this.Schemas.Account.validateSync(account);
+        return account;
+        // if (!Poverty.findUnique(account.budget.accounts, account.id)) {
+        //     throw Poverty.Error.Account.Duplicate(account.id);
+        // }
     }
 
     // Dev
