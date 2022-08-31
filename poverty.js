@@ -219,7 +219,7 @@ class Poverty {
 
     timeFrom(time) {
         if (time === Poverty.TIME.NOW) {
-            return new Date().getTime();
+            return new Date();
         }
     }
 
@@ -308,9 +308,6 @@ class Poverty {
     validateTransaction(transaction) {
         if (!transaction) throw Poverty.Error.Transaction.Invalid();
         transaction = this.Schemas.Transaction.validateSync(transaction);
-        // if (!Poverty.findUnique(this.transactions, transaction.id)) {
-        //     throw Poverty.Error.Transaction.Duplicate(transaction.id);
-        // }
         for (let child of transaction.children) {
             if (!this.ts.includes(child)) {
                 throw Poverty.Error.Transaction.NotExist(child);
@@ -444,9 +441,6 @@ class Poverty {
         if (!pool) throw Poverty.Error.Pool.Invalid();
         pool = this.Schemas.Pool.validateSync(pool);
         return pool;
-        // if (!Poverty.findUnique(this.pools, pool.id)) {
-        //     throw Poverty.Error.Pool.Duplicate(pool.id);
-        // }
     }
 
     insertPool(pool) {
@@ -501,9 +495,6 @@ class Poverty {
     validateBudget(budget) {
         if (!budget) throw Poverty.Error.Budget.Invalid();
         budget = this.Schemas.Budget.validateSync(budget);
-        // if (!Poverty.findUnique(this.budgets, budget.id)) {
-        //     throw Poverty.Error.Budget.Duplicate(budget.id);
-        // }
         if (Poverty.hasDuplicates(budget.accounts.map(account => account.id))) {
             throw Poverty.Error.Account.Duplicates();
         }
@@ -514,10 +505,11 @@ class Poverty {
         Poverty.setDefaults(budget, {
             id: () => Poverty.uuid(this.bs),
             currency: () => this.defaultCurrency,
-            automation: () => ({
-                start: Poverty.timeFrom(Poverty.TIME.NOW)
-            }),
+            automation: {},
             accounts: []
+        });
+        Poverty.setDefaults(budget.automation, {
+            start: () => this.timeFrom(Poverty.TIME.NOW)
         });
         budget = this.validateBudget(budget);
         if (!budget) throw Poverty.Error.Budget.Invalid();
@@ -553,9 +545,6 @@ class Poverty {
         if (!account) throw Poverty.Error.Account.Invalid();
         account = this.Schemas.Account.validateSync(account);
         return account;
-        // if (!Poverty.findUnique(account.budget.accounts, account.id)) {
-        //     throw Poverty.Error.Account.Duplicate(account.id);
-        // }
     }
 
     // Dev
