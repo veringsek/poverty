@@ -269,7 +269,7 @@ class Poverty {
         for (let { error, ids, linkers } of linkings) {
             for (let linker of linkers) {
                 for (let id of linker) {
-                    if (!ids.includes(id)) {
+                    if (id && !ids.includes(id)) {
                         throw error(id);
                     }
                 }
@@ -358,7 +358,7 @@ class Poverty {
     deleteTransaction(transactionId) {
         let transaction = this.transaction(transactionId);
         if (!transaction) throw Poverty.Error.Transaction.NotExist(transaction.id);
-        if (this.transactions.some(transaction => transaction.parent === transaction.id)) {
+        if (this.transactions.some(child => child.parent === transaction.id)) {
             throw Poverty.Error.Transaction.InUse(transaction.id);
         }
         for (let link of this.transactions) {
