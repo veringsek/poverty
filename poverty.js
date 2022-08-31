@@ -329,8 +329,8 @@ class Poverty {
             name: '',
             type: Poverty.TRANSACTION.TYPE.TRANSFER,
             currency: () => this.defaultCurrency,
-            time: () => Poverty.timeFrom(Poverty.TIME.NOW),
-            logtime: () => Poverty.timeFrom(Poverty.TIME.NOW),
+            time: () => this.timeFrom(Poverty.TIME.NOW),
+            logtime: () => this.timeFrom(Poverty.TIME.NOW),
             children: []
         });
         transaction = this.validateTransaction(transaction);
@@ -339,6 +339,10 @@ class Poverty {
             throw Poverty.Error.Transaction.Duplicate(transaction.id);
         }
         this.transactions.push(transaction);
+        if (this.ts.includes(transaction.parent)) {
+            this.transaction(transaction.parent).children.push(transaction.id);
+        }
+        return transaction.id;
     }
 
     updateTransaction(transaction) {
