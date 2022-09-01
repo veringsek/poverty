@@ -56,6 +56,7 @@
         "name*": "string",
         "type*": "string(transfer|balance)",
         "price?": "number.real",
+        "balance?": "number.real",
         "currency*": "string -> #.currencies[?].id",
         "time*": "<Datetime>",
         "logtime*": "<Datetime>",

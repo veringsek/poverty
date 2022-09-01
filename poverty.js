@@ -249,8 +249,6 @@ class Poverty {
         // Linking Validation
         let linkings = [{
             error: Poverty.Error.Transaction.NotExist, ids: this.ts, linkers: [
-                this.transactions.map(transaction => transaction.source),
-                this.transactions.map(transaction => transaction.target),
                 this.transactions.map(transaction => transaction.children).flat(),
                 this.transactions.map(transaction => transaction.parent)
             ]
@@ -259,6 +257,11 @@ class Poverty {
                 this.transactions.map(transaction => transaction.currency),
                 this.pools.map(pool => pool.currency),
                 this.budgets.map(budget => budget.currency)
+            ]
+        }, {
+            error: Poverty.Error.Pool.NotExist, ids: this.ps, linkers: [
+                this.transactions.map(transaction => transaction.source),
+                this.transactions.map(transaction => transaction.target),
             ]
         }, {
             error: Poverty.Error.Budget.NotExist, ids: this.bs, linkers: [
@@ -549,6 +552,16 @@ class Poverty {
         if (!account) throw Poverty.Error.Account.Invalid();
         account = this.Schemas.Account.validateSync(account);
         return account;
+    }
+
+    // State
+
+    illustrate() {
+        // to calc balance of pools and accounts at all moments in the Poverty history
+    }
+
+    harmonics() {
+        // to find all transaction with type `balance` which happens to have the exact balance calc by Poverty.illustrate
     }
 
     // Dev
