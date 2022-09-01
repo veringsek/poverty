@@ -10,7 +10,7 @@ An account book stored in JSON.
 
 A transaction type `balance` is provided in Poverty, which can mitigate this problem.
 
-A transaction of type `balance` indicate that a pool is at an exact balance at the given moment. For example, a `balance` which looks like below
+A transaction of type `balance` indicates that a pool is at an exact balance at the given moment. For example, a `balance` which looks like below
 
 ```json
 {
@@ -28,7 +28,7 @@ A transaction of type `balance` indicate that a pool is at an exact balance at t
 
 indicates that something, apparently a robbing, happened before 08-31 and cause the balance in `wallet` changed, I couldn't figure that how much were robbed, but I do know this: I had only 1.6 dollars left at that exact moment, 08-31, which is when I got to check my `wallet` after I woke up in a hospital.
 
-The difference between using a transaction of type `balance` and of type `transfer` is its authenticity.
+The difference between using a transaction of type `balance` and of type `transfer` is the authenticity.
 
 Consider the history of `wallet` before the robbing is like below. For simplicity, `currency` , `logtime` , and `source` are hidden, as well as `type` .
 
