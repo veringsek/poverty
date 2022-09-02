@@ -18,7 +18,7 @@ const argv = yargs.command(['serve <path> [port] [blackbody]', '$0'], 'Start a P
         default: 80
     }).option('blackbody', {
         alias: 'b',
-        desc: 'Poverty server receive commands and run but returns nothing.',
+        desc: 'Poverty server receives commands and runs but returns nothing.',
         type: 'boolean',
         default: false
     });
@@ -29,16 +29,26 @@ function save(poverty = pv, path = DEV.TEST_JSON) {
     fs.writeFileSync(path, JSON.stringify(data, null, '\t'));
 }
 
+function blackbody(res, returning, code) {
+    if (argv.blackbody) {
+        res.sendStatus(code);
+    } else {
+        res.send(returning);
+    }
+}
+
 let pv = new Poverty(fs.readFileSync(DEV.TEST_JSON, 'utf-8'));
 
 let server = express();
 
+server.use((req, res, next) => {
+    res.set('Access-Control-Allow-Origin', '*');
+    res.set('Access-Control-Allow-Methods', 'GET', 'POST');
+    next();
+});
+
 server.get('/', (req, res) => {
-    if (argv.blackbody) {
-        res.sendStatus(403);
-    } else {
-        res.send(pv.data);
-    }
+    blackbody(res, pv.data, 403);
 });
 
 server.listen(PORT, () => {
