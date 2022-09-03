@@ -7,12 +7,29 @@
         {
             "type": "node",
             "request": "launch",
-            "name": "Launch Program",
+            "name": "Serve Blackbody",
+            "program": "${workspaceFolder}/main.js",
+            "args": [
+                "serve",
+                "./test/test.json",
+                "--blackbody"
+            ],
             "skipFiles": [
                 "<node_internals>/**"
-            ],
+            ]
+        },
+        {
+            "type": "node",
+            "request": "launch",
+            "name": "Serve",
             "program": "${workspaceFolder}\\main.js",
-            "args": ["serve", "./test/test.json"]
+            "args": [
+                "serve",
+                "./test/test.json"
+            ],
+            "skipFiles": [
+                "<node_internals>/**"
+            ]
         }
     ]
 }

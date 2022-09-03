@@ -3,6 +3,7 @@ const yargs = require('yargs');
 const Poverty = require('./poverty.js');
 const yup = require('yup');
 const express = require('express');
+const bodyParser = require('body-parser');
 const PORT = 80;
 
 let DEV = {
@@ -29,9 +30,10 @@ function save(poverty = pv, path = DEV.TEST_JSON) {
     fs.writeFileSync(path, JSON.stringify(data, null, '\t'));
 }
 
-function blackbody(res, returning, code) {
-    if (argv.blackbody) {
-        res.sendStatus(code);
+function blackbody(res, response, code) {
+    let returning = argv.blackbody ? code : response;
+    if (typeof returning === 'number') {
+        res.sendStatus(returning);
     } else {
         res.send(returning);
     }
@@ -40,6 +42,8 @@ function blackbody(res, returning, code) {
 let pv = new Poverty(fs.readFileSync(DEV.TEST_JSON, 'utf-8'));
 
 let server = express();
+
+// server.use(bodyParser.json());
 
 server.use((req, res, next) => {
     res.set('Access-Control-Allow-Origin', '*');
@@ -51,10 +55,19 @@ server.get('/', (req, res) => {
     blackbody(res, pv.data, 403);
 });
 
-server.listen(PORT, () => {
-    console.log(`Listening on ${PORT}.`);
+server.post('/transaction/insert', (req, res) => {
+    let transaction = req.body;
+    let id;
+    try {
+        id = pv.insertTransaction(transaction);
+    } catch (error) {
+        return blackbody(res, error, 500);
+    }
+    return blackbody(res, id, 200);
 });
 
-console.log('');
+server.listen(PORT, () => {
+    console.log(`Listening on localhost:${PORT}.`);
+});
 
 save()
