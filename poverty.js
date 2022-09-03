@@ -217,7 +217,7 @@ class Poverty {
         return array.map(element => element.id);
     }
 
-    timeFrom(time) {
+    static timeFrom(time) {
         if (time === Poverty.TIME.NOW) {
             return new Date();
         }
@@ -332,8 +332,8 @@ class Poverty {
             name: '',
             type: Poverty.TRANSACTION.TYPE.TRANSFER,
             currency: () => this.defaultCurrency,
-            time: () => this.timeFrom(Poverty.TIME.NOW),
-            logtime: () => this.timeFrom(Poverty.TIME.NOW),
+            time: () => Poverty.timeFrom(Poverty.TIME.NOW),
+            logtime: () => Poverty.timeFrom(Poverty.TIME.NOW),
             children: []
         });
         transaction = this.validateTransaction(transaction);
@@ -516,7 +516,7 @@ class Poverty {
             accounts: []
         });
         Poverty.setDefaults(budget.automation, {
-            start: () => this.timeFrom(Poverty.TIME.NOW)
+            start: () => Poverty.timeFrom(Poverty.TIME.NOW)
         });
         budget = this.validateBudget(budget);
         if (!budget) throw Poverty.Error.Budget.Invalid();
